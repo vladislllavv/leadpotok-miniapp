@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ЛидПоток</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root {
+            --bg: var(--tg-theme-bg-color, #fff);
+            --text: var(--tg-theme-text-color, #000);
+            --hint: var(--tg-theme-hint-color, #999);
+            --button: var(--tg-theme-button-color, #3390ec);
+            --button-text: var(--tg-theme-button-text-color, #fff);
+            --secondary-bg: var(--tg-theme-secondary-bg-color, #f1f1f1);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding: 16px;
+            line-height: 1.5;
+        }
+        .screen { display: none; }
+        .screen.active { display: block; }
+        
+        .header {
+            text-align: center;
+            padding: 20px 0 10px;
+            border-bottom: 1px solid var(--secondary-bg);
+            margin-bottom: 20px;
+        }
+        .logo { font-size: 28px; font-weight: 700; margin-bottom: 4px; }
+        .subtitle { color: var(--hint); font-size: 14px; }
+        
+        .form-group { margin-bottom: 16px; }
+        label { display: block; margin-bottom: 6px; font-weight: 500; font-size: 14px; }
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid var(--secondary-bg);
+            border-radius: 10px;
+            background: var(--secondary-bg);
+            color: var(--text);
+            font-size: 16px;
+            outline: none;
+        }
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--button);
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: var(--button);
+            color: var(--button-text);
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+        .btn:active { opacity: 0.9; }
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--button);
+            color: var(--button);
+        }
+        
+        .lead-card {
+            background: var(--secondary-bg);
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 12px;
+        }
+        .lead-title { font-weight: 600; font-size: 16px; margin-bottom: 6px; }
+        .lead-info { font-size: 14px; color: var(--hint); margin-bottom: 4px; }
+        .lead-phone { 
+            color: var(--button); 
+            font-weight: 500; 
+            text-decoration: none;
+            display: inline-block;
+            margin: 4px 0;
+        }
+        .lead-reason { 
+            font-size: 13px; 
+            margin-top: 8px; 
+            padding-top: 8px; 
+            border-top: 1px dashed var(--hint);
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            margin-bottom: 12px;
+        }
+        .status-active { background: #4cd964; color: #fff; }
+        .status-pending { background: #ff9500; color: #fff; }
+        .status-inactive { background: var(--hint); color: #fff; }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--hint);
+        }
+        .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+        
+        .nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--bg);
+            border-top: 1px solid var(--secondary-bg);
+            display: flex;
+            padding: 8px 0;
+        }
+        .nav-btn {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            font-size: 12px;
+            color: var(--hint);
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+        .nav-btn.active {
+            color: var(--button);
+            font-weight: 600;
+        }
+        .nav-btn .icon { display: block; font-size: 20px; margin-bottom: 2px; }
+        
+        .loader {
+            text-align: center;
+            padding: 30px;
+            color: var(--hint);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ЭКРАН 1: Регистрация -->
+    <div id="screen-register" class="screen active">
+        <div class="header">
+            <div class="logo">🚛 ЛидПоток</div>
+            <div class="subtitle">Находи тёплых клиентов в логистике</div>
+        </div>
+        
+        <div class="form-group">
+            <label>Ваша ниша</label>
+            <select id="niche">
+                <option value="">Выберите...</option>
+                <option value="грузоперевозки">Грузоперевозки по РФ</option>
+                <option value="международные">Международные перевозки</option>
+                <option value="склад">Складская логистика</option>
+                <option value="последняя_миля">Доставка последней мили</option>
+                <option value="другое">Другое</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label>Регион работы</label>
+            <input type="text" id="region" placeholder="Например: Москва, СПб, Краснодар...">
+        </div>
+        
+        <div class="form-group">
+            <label>Размер компании</label>
+            <select id="company_size">
+                <option value="">Выберите...</option>
+                <option value="solo">Соло / до 5 машин</option>
+                <option value="small">Малый бизнес (5-20 машин)</option>
+                <option value="medium">Средний (20-100 машин)</option>
+                <option value="large">Крупный (100+ машин)</option>
+            </select>
+        </div>
+        
+        <button class="btn" id="btn-start">🚀 Начать получать лиды</button>
+        <p style="text-align:center;color:var(--hint);font-size:12px;margin-top:12px">
+            Первые 3 дня — бесплатно. Потом 3 000 ₽/мес.
+        </p>
+    </div>
+
+    <!-- ЭКРАН 2: Лиды -->
+    <div id="screen-leads" class="screen">
+        <div class="header">
+            <div class="logo">🔥 Горячие лиды</div>
+            <div class="subtitle" id="leads-subtitle">Обновлено сегодня в 09:00</div>
+        </div>
+        
+        <div id="leads-list">
+            <!-- Лиды будут здесь -->
+            <div class="loader">Загружаем лиды...</div>
+        </div>
+    </div>
+
+    <!-- ЭКРАН 3: Статус -->
+    <div id="screen-status" class="screen">
+        <div class="header">
+            <div class="logo">📊 Мой статус</div>
+            <div class="subtitle">Управление подпиской</div>
+        </div>
+        
+        <div id="status-content">
+            <span class="status-badge status-pending" id="status-badge">Ожидает подтверждения</span>
+            <p style="margin:16px 0;font-size:15px">
+                Ваша заявка принята. Мы проверяем нишу и регион. 
+                Первые лиды придут в течение 24 часов.
+            </p>
+            <p style="color:var(--hint);font-size:13px;margin-bottom:20px">
+                💡 Совет: пока ждёте, проверьте, что телефон указан верно в профиле Telegram — 
+                клиенты будут звонить напрямую.
+            </p>
+            <button class="btn btn-outline" id="btn-contact">📩 Написать в поддержку</button>
+        </div>
+    </div>
+
+    <!-- Навигация -->
+    <div class="nav" id="main-nav" style="display:none">
+        <button class="nav-btn active" data-screen="leads">
+            <span class="icon">🔥</span>Лиды
+        </button>
+        <button class="nav-btn" data-screen="status">
+            <span class="icon">📊</span>Статус
+        </button>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        tg.enableClosingConfirmation();
+
+        // Получаем данные пользователя (безопасно, только для отображения)
+        const user = tg.initDataUnsafe.user || {};
+        const userId = user.id || 'unknown';
+        const userName = user.first_name || 'Пользователь';
+
+        // Переключение экранов
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById('screen-' + screenId).classList.add('active');
+            
+            // Показываем навигацию только после регистрации
+            const nav = document.getElementById('main-nav');
+            if (screenId === 'register') {
+                nav.style.display = 'none';
+            } else {
+                nav.style.display = 'flex';
+                // Обновляем активную кнопку
+                document.querySelectorAll('.nav-btn').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.screen === screenId);
+                });
+            }
+        }
+
+        // Навигация по кнопкам
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                showScreen(btn.dataset.screen);
+            });
+        });
+
+        // Обработчик кнопки "Начать"
+        document.getElementById('btn-start').addEventListener('click', () => {
+            const niche = document.getElementById('niche').value;
+            const region = document.getElementById('region').value.trim();
+            const size = document.getElementById('company_size').value;
+            
+            if (!niche || !region || !size) {
+                tg.showAlert('Пожалуйста, заполните все поля');
+                return;
+            }
+            
+            // Отправляем данные боту
+            const data = {
+                action: 'register',
+                user_id: userId,
+                name: userName,
+                niche: niche,
+                region: region,
+                company_size: size,
+                timestamp: new Date().toISOString()
+            };
+            
+            tg.sendData(JSON.stringify(data));
+            
+            // Показываем экран лидов (в реальном приложении здесь была бы загрузка)
+            showScreen('leads');
+            loadLeads(); // Загружаем демо-лиды
+        });
+
+        // Демо-лиды (в реальности будут приходить от бота / из таблицы)
+        const demoLeads = [
+            {
+                company: 'ООО "ТрансЛогистик"',
+                phone: '+7 (495) 123-45-67',
+                source: '2ГИС, Москва',
+                reason: 'Ищут подрядчика на регулярные рейсы Москва-Казань. Бюджет подтверждён.'
+            },
+            {
+                company: 'ИП Смирнов А.В.',
+                phone: '+7 (926) 555-12-34',
+                source: 'hh.ru, СПб',
+                reason: 'Расширяют парк, нужны машины с рефрижератором. Готовы к долгосрочному сотрудничеству.'
+            },
+            {
+                company: 'СК "Юг-Транс"',
+                phone: '+7 (861) 987-65-43',
+                source: '2ГИС, Краснодар',
+                reason: 'Запустили новый склад, нужен ежедневный вывоз товаров. Срочно.'
+            }
+        ];
+
+        // Отображение лидов
+        function loadLeads() {
+            const container = document.getElementById('leads-list');
+            
+            // В реальном приложении здесь был бы fetch() к твоему бэкенду
+            // Для демо показываем тестовые данные
+            
+            setTimeout(() => {
+                container.innerHTML = demoLeads.map(lead => `
+                    <div class="lead-card">
+                        <div class="lead-title">${lead.company}</div>
+                        <div class="lead-info">📍 ${lead.source}</div>
+                        <a href="tel:${lead.phone.replace(/\D/g,'')}" class="lead-phone">📞 ${lead.phone}</a>
+                        <div class="lead-reason">💡 ${lead.reason}</div>
+                    </div>
+                `).join('');
+            }, 800);
+        }
+
+        // Кнопка "Написать в поддержку"
+        document.getElementById('btn-contact').addEventListener('click', () => {
+            tg.sendData(JSON.stringify({
+                action: 'support_request',
+                user_id: userId,
+                message: 'Пользователь запросил поддержку из раздела Статус'
+            }));
+            tg.showAlert('Ваш запрос отправлен! Ответим в течение часа.');
+        });
+
+        // Инициализация: если пользователь уже "зарегистрирован" (для демо)
+        // В реальном приложении здесь была бы проверка через бэкенд
+        const isRegistered = localStorage.getItem('leadpotok_registered');
+        if (isRegistered === 'yes') {
+            showScreen('leads');
+            loadLeads();
+        }
+
+        // Сохраняем "регистрацию" после первого запуска (для демо)
+        document.getElementById('btn-start').addEventListener('click', () => {
+            localStorage.setItem('leadpotok_registered', 'yes');
+        });
+
+        // Обновляем время в заголовке
+        document.getElementById('leads-subtitle').textContent = 
+            'Обновлено сегодня в ' + new Date().toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'});
+    </script>
+</body>
+</html>
