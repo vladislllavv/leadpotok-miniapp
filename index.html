@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ЛидПоток</title>
+    <title>ЛидПоток: Китай</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
@@ -13,6 +13,8 @@
             --button: var(--tg-theme-button-color, #3390ec);
             --button-text: var(--tg-theme-button-text-color, #fff);
             --secondary-bg: var(--tg-theme-secondary-bg-color, #f1f1f1);
+            --success: #4cd964;
+            --warning: #ff9500;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -20,25 +22,28 @@
             background: var(--bg);
             color: var(--text);
             padding: 16px;
+            padding-bottom: 90px;
             line-height: 1.5;
         }
-        .screen { display: none; }
+        .screen { display: none; animation: fadeIn 0.3s; }
         .screen.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
         .header {
             text-align: center;
-            padding: 20px 0 10px;
-            border-bottom: 1px solid var(--secondary-bg);
+            padding: 15px 0;
             margin-bottom: 20px;
+            border-bottom: 1px solid var(--secondary-bg);
         }
-        .logo { font-size: 28px; font-weight: 700; margin-bottom: 4px; }
-        .subtitle { color: var(--hint); font-size: 14px; }
+        .logo { font-size: 22px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .flag { font-size: 20px; }
+        .subtitle { color: var(--hint); font-size: 13px; margin-top: 4px; }
         
         .form-group { margin-bottom: 16px; }
-        label { display: block; margin-bottom: 6px; font-weight: 500; font-size: 14px; }
+        label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 14px; }
         input, select, textarea {
             width: 100%;
-            padding: 12px 14px;
+            padding: 12px;
             border: 1px solid var(--secondary-bg);
             border-radius: 10px;
             background: var(--secondary-bg);
@@ -46,9 +51,7 @@
             font-size: 16px;
             outline: none;
         }
-        input:focus, select:focus, textarea:focus {
-            border-color: var(--button);
-        }
+        input:focus, select:focus, textarea:focus { border-color: var(--button); }
         
         .btn {
             width: 100%;
@@ -61,173 +64,160 @@
             font-weight: 600;
             cursor: pointer;
             margin-top: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
         .btn:active { opacity: 0.9; }
-        .btn-outline {
-            background: transparent;
-            border: 2px solid var(--button);
-            color: var(--button);
-        }
+        .btn-outline { background: transparent; border: 2px solid var(--button); color: var(--button); }
+        .btn-success { background: var(--success); color: #fff; }
+        .btn-warning { background: var(--warning); color: #fff; }
+        .btn-reset { background: transparent; color: var(--hint); font-size: 14px; margin-top: 10px; }
         
         .lead-card {
             background: var(--secondary-bg);
             border-radius: 12px;
             padding: 14px;
             margin-bottom: 12px;
+            border-left: 4px solid var(--success);
         }
-        .lead-title { font-weight: 600; font-size: 16px; margin-bottom: 6px; }
-        .lead-info { font-size: 14px; color: var(--hint); margin-bottom: 4px; }
+        .lead-title { font-weight: 700; font-size: 16px; margin-bottom: 4px; }
+        .lead-hot { 
+            display: inline-block; 
+            background: rgba(76, 217, 100, 0.15); 
+            color: var(--success); 
+            padding: 2px 8px; 
+            border-radius: 6px; 
+            font-size: 11px; 
+            font-weight: 600; 
+            margin-bottom: 8px; 
+        }
+        .lead-info { font-size: 13px; color: var(--hint); margin: 4px 0; }
         .lead-phone { 
             color: var(--button); 
-            font-weight: 500; 
-            text-decoration: none;
-            display: inline-block;
-            margin: 4px 0;
+            font-weight: 600; 
+            text-decoration: none; 
+            display: block; 
+            margin: 8px 0; 
+            font-size: 15px;
         }
         .lead-reason { 
             font-size: 13px; 
-            margin-top: 8px; 
-            padding-top: 8px; 
+            margin-top: 10px; 
+            padding-top: 10px; 
             border-top: 1px dashed var(--hint);
+            background: rgba(51,144,236,0.08);
+            padding: 8px 10px;
+            border-radius: 6px;
         }
+        .lead-reason b { color: var(--text); }
         
-        .status-badge {
-            display: inline-block;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 500;
-            margin-bottom: 12px;
-        }
-        .status-active { background: #4cd964; color: #fff; }
-        .status-pending { background: #ff9500; color: #fff; }
-        .status-inactive { background: var(--hint); color: #fff; }
-        
-        .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-            color: var(--hint);
-        }
-        .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
-        
-        .nav {
+        .toolbar {
             position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
+            bottom: 0; left: 0; right: 0;
             background: var(--bg);
             border-top: 1px solid var(--secondary-bg);
+            padding: 10px 16px;
             display: flex;
-            padding: 8px 0;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 100;
         }
-        .nav-btn {
-            flex: 1;
-            padding: 10px;
-            text-align: center;
-            font-size: 12px;
-            color: var(--hint);
-            background: none;
-            border: none;
-            cursor: pointer;
-        }
-        .nav-btn.active {
-            color: var(--button);
-            font-weight: 600;
-        }
-        .nav-btn .icon { display: block; font-size: 20px; margin-bottom: 2px; }
+        .toolbar .btn { margin: 0; font-size: 14px; padding: 12px; }
         
-        .loader {
+        .empty-state { text-align: center; padding: 40px 20px; color: var(--hint); }
+        .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+        
+        .filters-summary {
+            background: var(--secondary-bg);
+            padding: 10px 14px;
+            border-radius: 10px;
+            margin-bottom: 16px;
+            font-size: 13px;
+        }
+        .filters-summary b { color: var(--text); }
+        
+        .counter {
             text-align: center;
-            padding: 30px;
-            color: var(--hint);
+            font-size: 24px;
+            font-weight: 700;
+            margin: 10px 0;
+            color: var(--button);
         }
     </style>
 </head>
 <body>
 
-    <!-- ЭКРАН 1: Регистрация -->
-    <div id="screen-register" class="screen active">
+    <!-- ЭКРАН 1: Форма поиска клиентов -->
+    <div id="screen-search" class="screen active">
         <div class="header">
-            <div class="logo">🚛 ЛидПоток</div>
-            <div class="subtitle">Находи тёплых клиентов в логистике</div>
+            <div class="logo"><span class="flag">🇨🇳→🇷🇺</span> ЛидПоток: Китай</div>
+            <div class="subtitle">Находи импортёров, которым нужна доставка</div>
         </div>
         
         <div class="form-group">
-            <label>Ваша ниша</label>
-            <select id="niche">
+            <label>📦 Какие грузы ты возишь?</label>
+            <select id="cargo_type">
                 <option value="">Выберите...</option>
-                <option value="грузоперевозки">Грузоперевозки по РФ</option>
-                <option value="международные">Международные перевозки</option>
-                <option value="склад">Складская логистика</option>
-                <option value="последняя_миля">Доставка последней мили</option>
-                <option value="другое">Другое</option>
+                <option value="одежда_текстиль">Одежда, текстиль, обувь</option>
+                <option value="электроника">Электроника, гаджеты</option>
+                <option value="оборудование">Станки, оборудование</option>
+                <option value="товары_для_дома">Товары для дома, декор</option>
+                <option value="автозапчасти">Автозапчасти</option>
+                <option value="сырьё">Сырьё, материалы</option>
+                <option value="любые">Любые грузы (универсал)</option>
             </select>
         </div>
         
         <div class="form-group">
-            <label>Регион работы</label>
-            <input type="text" id="region" placeholder="Например: Москва, СПб, Краснодар...">
+            <label>📍 В какие регионы РФ доставляешь?</label>
+            <input type="text" id="regions" placeholder="Например: Москва, СПб, Краснодар...">
+            <small style="color:var(--hint)">Можно несколько через запятую</small>
         </div>
         
         <div class="form-group">
-            <label>Размер компании</label>
-            <select id="company_size">
-                <option value="">Выберите...</option>
-                <option value="solo">Соло / до 5 машин</option>
-                <option value="small">Малый бизнес (5-20 машин)</option>
-                <option value="medium">Средний (20-100 машин)</option>
-                <option value="large">Крупный (100+ машин)</option>
+            <label>📊 Минимальный объём (тонн)</label>
+            <select id="min_volume">
+                <option value="0">Любой (от 1 кг)</option>
+                <option value="1">От 1 тонны</option>
+                <option value="5">От 5 тонн</option>
+                <option value="20">От 20 тонн (контейнер)</option>
             </select>
         </div>
         
-        <button class="btn" id="btn-start">🚀 Начать получать лиды</button>
-        <p style="text-align:center;color:var(--hint);font-size:12px;margin-top:12px">
-            Первые 3 дня — бесплатно. Потом 3 000 ₽/мес.
-        </p>
+        <div class="form-group">
+            <label>💡 Дополнительные пожелания (необязательно)</label>
+            <textarea id="notes" rows="2" placeholder="Например: только растаможка, только доставка до склада..."></textarea>
+        </div>
+        
+        <button class="btn" id="btn-find">🔍 Найти клиентов</button>
+        <button class="btn btn-reset" id="btn-reset">🔄 Сбросить форму</button>
     </div>
 
-    <!-- ЭКРАН 2: Лиды -->
+    <!-- ЭКРАН 2: База горячих лидов -->
     <div id="screen-leads" class="screen">
         <div class="header">
             <div class="logo">🔥 Горячие лиды</div>
-            <div class="subtitle" id="leads-subtitle">Обновлено сегодня в 09:00</div>
+            <div class="subtitle" id="leads-date">Сгенерировано: <span id="current-time"></span></div>
         </div>
+        
+        <div class="filters-summary" id="filters-summary"></div>
+        
+        <div class="counter">Найдено: <span id="leads-count">0</span> компаний</div>
         
         <div id="leads-list">
-            <!-- Лиды будут здесь -->
-            <div class="loader">Загружаем лиды...</div>
+            <div class="empty-state">
+                <div class="icon">🔍</div>
+                <p>Заполните форму, чтобы найти импортёров из Китая</p>
+            </div>
         </div>
     </div>
 
-    <!-- ЭКРАН 3: Статус -->
-    <div id="screen-status" class="screen">
-        <div class="header">
-            <div class="logo">📊 Мой статус</div>
-            <div class="subtitle">Управление подпиской</div>
-        </div>
-        
-        <div id="status-content">
-            <span class="status-badge status-pending" id="status-badge">Ожидает подтверждения</span>
-            <p style="margin:16px 0;font-size:15px">
-                Ваша заявка принята. Мы проверяем нишу и регион. 
-                Первые лиды придут в течение 24 часов.
-            </p>
-            <p style="color:var(--hint);font-size:13px;margin-bottom:20px">
-                💡 Совет: пока ждёте, проверьте, что телефон указан верно в профиле Telegram — 
-                клиенты будут звонить напрямую.
-            </p>
-            <button class="btn btn-outline" id="btn-contact">📩 Написать в поддержку</button>
-        </div>
-    </div>
-
-    <!-- Навигация -->
-    <div class="nav" id="main-nav" style="display:none">
-        <button class="nav-btn active" data-screen="leads">
-            <span class="icon">🔥</span>Лиды
-        </button>
-        <button class="nav-btn" data-screen="status">
-            <span class="icon">📊</span>Статус
-        </button>
+    <!-- Панель действий -->
+    <div class="toolbar" id="main-toolbar" style="display:none">
+        <button class="btn btn-success" id="btn-download">📥 Скачать базу в Excel</button>
+        <button class="btn btn-outline" id="btn-new">🔄 Новый поиск</button>
     </div>
 
     <script>
@@ -235,132 +225,237 @@
         tg.expand();
         tg.enableClosingConfirmation();
 
-        // Получаем данные пользователя (безопасно, только для отображения)
         const user = tg.initDataUnsafe.user || {};
         const userId = user.id || 'unknown';
-        const userName = user.first_name || 'Пользователь';
+        const userName = user.first_name || 'Логист';
 
-        // Переключение экранов
-        function showScreen(screenId) {
+        // Текущие лиды (для скачивания)
+        let currentLeads = [];
+
+        // --- Переключение экранов ---
+        function showScreen(id) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById('screen-' + screenId).classList.add('active');
-            
-            // Показываем навигацию только после регистрации
-            const nav = document.getElementById('main-nav');
-            if (screenId === 'register') {
-                nav.style.display = 'none';
-            } else {
-                nav.style.display = 'flex';
-                // Обновляем активную кнопку
-                document.querySelectorAll('.nav-btn').forEach(btn => {
-                    btn.classList.toggle('active', btn.dataset.screen === screenId);
-                });
-            }
+            document.getElementById('screen-' + id).classList.add('active');
+            document.getElementById('main-toolbar').style.display = (id === 'leads') ? 'flex' : 'none';
         }
 
-        // Навигация по кнопкам
-        document.querySelectorAll('.nav-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                showScreen(btn.dataset.screen);
-            });
+        // --- Сброс формы ---
+        document.getElementById('btn-reset').addEventListener('click', () => {
+            document.getElementById('cargo_type').value = '';
+            document.getElementById('regions').value = '';
+            document.getElementById('min_volume').value = '0';
+            document.getElementById('notes').value = '';
+            tg.showAlert('✅ Форма очищена');
         });
 
-        // Обработчик кнопки "Начать"
-        document.getElementById('btn-start').addEventListener('click', () => {
-            const niche = document.getElementById('niche').value;
-            const region = document.getElementById('region').value.trim();
-            const size = document.getElementById('company_size').value;
+        // --- Поиск лидов ---
+        document.getElementById('btn-find').addEventListener('click', () => {
+            const cargo = document.getElementById('cargo_type').value;
+            const regions = document.getElementById('regions').value.trim();
+            const volume = document.getElementById('min_volume').value;
+            const notes = document.getElementById('notes').value.trim();
             
-            if (!niche || !region || !size) {
-                tg.showAlert('Пожалуйста, заполните все поля');
+            if (!cargo || !regions) {
+                tg.showAlert('⚠️ Укажите тип груза и регион доставки');
                 return;
             }
             
-            // Отправляем данные боту
-            const data = {
-                action: 'register',
+            // Отправляем запрос боту (для учёта/аналитики)
+            tg.sendData(JSON.stringify({
+                action: 'find_clients',
                 user_id: userId,
                 name: userName,
-                niche: niche,
-                region: region,
-                company_size: size,
+                cargo_type: cargo,
+                regions: regions,
+                min_volume: volume,
+                notes: notes,
                 timestamp: new Date().toISOString()
-            };
-            
-            tg.sendData(JSON.stringify(data));
-            
-            // Показываем экран лидов (в реальном приложении здесь была бы загрузка)
-            showScreen('leads');
-            loadLeads(); // Загружаем демо-лиды
-        });
-
-        // Демо-лиды (в реальности будут приходить от бота / из таблицы)
-        const demoLeads = [
-            {
-                company: 'ООО "ТрансЛогистик"',
-                phone: '+7 (495) 123-45-67',
-                source: '2ГИС, Москва',
-                reason: 'Ищут подрядчика на регулярные рейсы Москва-Казань. Бюджет подтверждён.'
-            },
-            {
-                company: 'ИП Смирнов А.В.',
-                phone: '+7 (926) 555-12-34',
-                source: 'hh.ru, СПб',
-                reason: 'Расширяют парк, нужны машины с рефрижератором. Готовы к долгосрочному сотрудничеству.'
-            },
-            {
-                company: 'СК "Юг-Транс"',
-                phone: '+7 (861) 987-65-43',
-                source: '2ГИС, Краснодар',
-                reason: 'Запустили новый склад, нужен ежедневный вывоз товаров. Срочно.'
-            }
-        ];
-
-        // Отображение лидов
-        function loadLeads() {
-            const container = document.getElementById('leads-list');
-            
-            // В реальном приложении здесь был бы fetch() к твоему бэкенду
-            // Для демо показываем тестовые данные
-            
-            setTimeout(() => {
-                container.innerHTML = demoLeads.map(lead => `
-                    <div class="lead-card">
-                        <div class="lead-title">${lead.company}</div>
-                        <div class="lead-info">📍 ${lead.source}</div>
-                        <a href="tel:${lead.phone.replace(/\D/g,'')}" class="lead-phone">📞 ${lead.phone}</a>
-                        <div class="lead-reason">💡 ${lead.reason}</div>
-                    </div>
-                `).join('');
-            }, 800);
-        }
-
-        // Кнопка "Написать в поддержку"
-        document.getElementById('btn-contact').addEventListener('click', () => {
-            tg.sendData(JSON.stringify({
-                action: 'support_request',
-                user_id: userId,
-                message: 'Пользователь запросил поддержку из раздела Статус'
             }));
-            tg.showAlert('Ваш запрос отправлен! Ответим в течение часа.');
+            
+            // Генерируем демо-лиды (в реальности — запрос к твоему парсеру)
+            currentLeads = generateDemoLeads(cargo, regions, volume);
+            
+            // Показываем результаты
+            renderLeads(currentLeads, cargo, regions);
+            showScreen('leads');
+            
+            // Обновляем время
+            document.getElementById('current-time').textContent = new Date().toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'});
         });
 
-        // Инициализация: если пользователь уже "зарегистрирован" (для демо)
-        // В реальном приложении здесь была бы проверка через бэкенд
-        const isRegistered = localStorage.getItem('leadpotok_registered');
-        if (isRegistered === 'yes') {
-            showScreen('leads');
-            loadLeads();
+        // --- Генерация демо-лидов (импортёры из Китая) ---
+        function generateDemoLeads(cargoType, regions, minVolume) {
+            // В реальном приложении здесь будет запрос к твоему бэкенду/парсеру
+            // Для демо — реалистичные примеры импортёров
+            const allLeads = [
+                {
+                    company: 'ООО "Восток-Текстиль"',
+                    contact: 'Анна, руководитель закупок',
+                    phone: '+7 (495) 234-56-78',
+                    city: 'Москва',
+                    cargo: 'одежда_текстиль',
+                    volume: '3-5 тонн/мес',
+                    source: 'hh.ru (вакансия "Менеджер ВЭД Китай")',
+                    reason: '<b>Горячий:</b> Ищут логиста для регулярных поставок одежды из Гуанчжоу. В вакансии указано "опыт работы с карго из Китая". Значит, уже возят и могут искать альтернативу.'
+                },
+                {
+                    company: 'ИП Чжан Вэй (маркетплейсы)',
+                    contact: 'Вячеслав, владелец',
+                    phone: '+7 (926) 888-12-34',
+                    city: 'Москва',
+                    cargo: 'электроника',
+                    volume: '1-3 тонны/мес',
+                    source: 'Авито: "Ищу доставку с 1688"',
+                    reason: '<b>Очень горячий:</b> Прямо сейчас ищет логиста для выкупа и доставки электроники. Первый груз — на следующей неделе. Конкуренция высокая — звонить срочно.'
+                },
+                {
+                    company: 'ТД "СтанкоИмпорт-Юг"',
+                    contact: 'Дмитрий, директор',
+                    phone: '+7 (861) 555-90-12',
+                    city: 'Краснодар',
+                    cargo: 'оборудование',
+                    volume: '10-20 тонн/мес',
+                    source: '2ГИС + сайт компании',
+                    reason: '<b>Тёплый:</b> Продают станки из Китая, на сайте указано "доставка под ключ", но логист — на аутсорсе. Возможна замена подрядчика.'
+                },
+                {
+                    company: 'ООО "АвтоДеталь-Сибирь"',
+                    contact: 'Елена, отдел ВЭД',
+                    phone: '+7 (383) 111-22-33',
+                    city: 'Новосибирск',
+                    cargo: 'автозапчасти',
+                    volume: '5-10 тонн/мес',
+                    source: 'Telegram-чат "Импортёры Китая"',
+                    reason: '<b>Горячий:</b> Вчера писали в чат: "Нужен надёжный логист на Ж/Д из Урумчи. Текущий срывает сроки". Идеальный момент для предложения.'
+                },
+                {
+                    company: 'ИП Смирнов (товары для дома)',
+                    contact: 'Алексей, владелец',
+                    phone: '+7 (903) 444-55-66',
+                    city: 'Екатеринбург',
+                    cargo: 'товары_для_дома',
+                    volume: 'до 1 тонны/мес',
+                    source: 'Wildberries seller + 2ГИС',
+                    reason: '<b>Тёплый:</b> Продаёт декор с пометкой "Китай", но не указывает логиста на сайте. Вероятно, возит через посредника — можно предложить прямую доставку.'
+                },
+                {
+                    company: 'ООО "Сырьё-Трейд"',
+                    contact: 'Ольга, логист',
+                    phone: '+7 (495) 777-88-99',
+                    city: 'Москва',
+                    cargo: 'сырьё',
+                    volume: '20+ тонн/мес',
+                    source: 'Контур.Фокус + сайт',
+                    reason: '<b>Тёплый:</b> Импортируют хим. сырьё из Китая. В открытых данных — частая смена логистических партнёров. Возможно, недовольны текущим.'
+                }
+            ];
+            
+            // Фильтрация по параметрам
+            return allLeads.filter(lead => {
+                const cargoMatch = cargoType === 'любые' || lead.cargo === cargoType;
+                const regionMatch = regions.toLowerCase().split(',').some(r => 
+                    lead.city.toLowerCase().includes(r.trim().toLowerCase())
+                );
+                return cargoMatch && regionMatch;
+            });
         }
 
-        // Сохраняем "регистрацию" после первого запуска (для демо)
-        document.getElementById('btn-start').addEventListener('click', () => {
-            localStorage.setItem('leadpotok_registered', 'yes');
+        // --- Отображение лидов ---
+        function renderLeads(leads, cargo, regions) {
+            const container = document.getElementById('leads-list');
+            const countEl = document.getElementById('leads-count');
+            const summaryEl = document.getElementById('filters-summary');
+            
+            // Показываем применённые фильтры
+            const cargoNames = {
+                'одежда_текстиль': 'Одежда и текстиль',
+                'электроника': 'Электроника',
+                'оборудование': 'Оборудование',
+                'товары_для_дома': 'Товары для дома',
+                'автозапчасти': 'Автозапчасти',
+                'сырьё': 'Сырьё',
+                'любые': 'Любые грузы'
+            };
+            summaryEl.innerHTML = `<b>Фильтры:</b> ${cargoNames[cargo] || cargo} | 📍 ${regions}`;
+            
+            countEl.textContent = leads.length;
+            
+            if (leads.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">😕</div>
+                        <p>Пока нет лидов по этим параметрам</p>
+                        <button class="btn btn-outline" style="margin-top:15px" onclick="showScreen('search')">Изменить поиск</button>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = leads.map((lead, idx) => `
+                <div class="lead-card">
+                    <span class="lead-hot">🔥 Горячий лид</span>
+                    <div class="lead-title">${lead.company}</div>
+                    <div class="lead-info">👤 ${lead.contact}</div>
+                    <div class="lead-info">📍 ${lead.city} | 📦 ${lead.volume}</div>
+                    <a href="tel:${lead.phone.replace(/\D/g,'')}" class="lead-phone">📞 ${lead.phone}</a>
+                    <div class="lead-info">🔍 Источник: ${lead.source}</div>
+                    <div class="lead-reason">${lead.reason}</div>
+                </div>
+            `).join('');
+        }
+
+        // --- Скачивание в Excel (CSV) ---
+        document.getElementById('btn-download').addEventListener('click', () => {
+            if (currentLeads.length === 0) {
+                tg.showAlert('❌ Нет данных для скачивания');
+                return;
+            }
+            
+            // Формируем CSV с кириллицей (BOM для Excel)
+            const BOM = '\uFEFF';
+            const headers = ['Компания','Контакт','Телефон','Город','Груз','Объём','Источник','Почему горячий'];
+            const rows = currentLeads.map(lead => [
+                lead.company,
+                lead.contact,
+                lead.phone,
+                lead.city,
+                lead.cargo,
+                lead.volume,
+                lead.source,
+                lead.reason.replace(/<[^>]*>/g, '') // убираем HTML-теги
+            ]);
+            
+            const csv = [headers, ...rows]
+                .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+                .join('\n');
+                
+            const blob = new Blob([BOM + csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Лиды_Китай_${new Date().toISOString().slice(0,10)}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            tg.showAlert(`✅ Скачано ${currentLeads.length} лидов!`);
+            
+            // Уведомляем бота о скачивании
+            tg.sendData(JSON.stringify({
+                action: 'leads_downloaded',
+                user_id: userId,
+                count: currentLeads.length,
+                timestamp: new Date().toISOString()
+            }));
         });
 
-        // Обновляем время в заголовке
-        document.getElementById('leads-subtitle').textContent = 
-            'Обновлено сегодня в ' + new Date().toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'});
+        // --- Новый поиск ---
+        document.getElementById('btn-new').addEventListener('click', () => {
+            showScreen('search');
+            currentLeads = [];
+        });
+
+        // Инициализация времени
+        document.getElementById('current-time').textContent = new Date().toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'});
     </script>
 </body>
 </html>
